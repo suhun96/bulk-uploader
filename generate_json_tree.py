@@ -25,11 +25,24 @@ def generate_json_tree(root_path):
             tree[folder_id]["parentIdList"] = tree[parent_id]["parentIdList"] + [parent_id]
         return folder_id
 
+    # def create_thumbnail(image_path):
+    #     with Image.open(image_path) as img:
+    #         max_size = 128
+    #         ratio = max_size / max(img.width, img.height)
+    #         img.thumbnail((img.width * ratio, img.height * ratio))
+    #         buffer = io.BytesIO()
+    #         img.save(buffer, format='PNG')
+    #         encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    #         return "data:image/png;base64," + encoded_string
+
     def create_thumbnail(image_path):
         with Image.open(image_path) as img:
-            max_size = 128
-            ratio = max_size / max(img.width, img.height)
-            img.thumbnail((img.width * ratio, img.height * ratio))
+            maxHeight = 128  # 세로 길이를 128픽셀로 고정
+            ratio = maxHeight / img.height  # 세로 기준으로 비율 계산
+            new_width = int(img.width * ratio)  # 가로 크기 조정
+            new_height = maxHeight  # 세로 크기 고정
+
+            img = img.resize((new_width, new_height), Image.ANTIALIAS)  # 이미지 크기 조정
             buffer = io.BytesIO()
             img.save(buffer, format='PNG')
             encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
