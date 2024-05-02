@@ -37,18 +37,22 @@ def generate_json_tree(root_path):
     
     def encode_image_base64_with_exif(image_path):
     	with Image.open(image_path) as img:
-         	info = img.info.copy()
-        buffer = io.BytesIO()
-        pnginfo = PngImagePlugin.PngInfo()
-        for key, value in info.items():
-            if isinstance(value, bytes):
-                value = value.decode('utf-8', errors='ignore')
-            elif isinstance(value, tuple):
-                value = ', '.join(str(v) for v in value)  # 튜플의 각 요소를 문자열로 변환하고, 쉼표로 연결
-            pnginfo.add_text(key, value)
-        img.save(buffer, format='PNG', pnginfo=pnginfo)
-        encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
-        return f"data:image/png;base64,{encoded_string}"
+            info = img.info.copy()
+            buffer = io.BytesIO()
+            pnginfo = PngImagePlugin.PngInfo()
+            
+            for key, value in info.items():
+                if isinstance(value, bytes):
+                    value = value.decode('utf-8', errors='ignore')
+                elif isinstance(value, tuple):
+                    print('여기가 이상합니다.')
+                    print(value)
+                    value = ', '.join(str(v) for v in value)  # 튜플의 각 요소를 문자열로 변환하고, 쉼표로 연결
+                pnginfo.add_text(key, value)
+            
+            img.save(buffer, format='PNG', pnginfo=pnginfo)
+            encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            return f"data:image/png;base64,{encoded_string}"
 
     # 디렉토리 탐색 및 JSON 구조 생성
     for dirpath, dirnames, filenames in os.walk(root_path):
