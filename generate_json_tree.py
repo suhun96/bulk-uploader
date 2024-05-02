@@ -42,7 +42,7 @@ def generate_json_tree(root_path):
             new_width = int(img.width * ratio)  # 가로 크기 조정
             new_height = maxHeight  # 세로 크기 고정
 
-            img = img.resize((new_width, new_height), Image.ANTIALIAS)  # 이미지 크기 조정
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)  # 이미지 크기 조정
             buffer = io.BytesIO()
             img.save(buffer, format='PNG')
             encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
