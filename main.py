@@ -1,3 +1,22 @@
+import subprocess
+import sys
+import pkg_resources
+
+def install_requirements():
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+
+try:
+    with open('requirements.txt', 'r') as f:
+        packages = f.readlines()
+    installed_packages = {pkg.key for pkg in pkg_resources.working_set}
+    missing_packages = [pkg.split('==')[0].strip() for pkg in packages if pkg.split('==')[0].strip() not in installed_packages]
+
+    if missing_packages:
+        print("Installing missing packages:", missing_packages)
+        install_requirements()
+except Exception as e:
+    print(f"An error occurred while installing requirements: {e}")
+
 import os
 import json
 from tqdm import tqdm
