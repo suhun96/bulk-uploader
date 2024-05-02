@@ -44,11 +44,11 @@ def generate_json_tree(root_path):
             for key, value in info.items():
                 if isinstance(value, bytes):
                     value = value.decode('utf-8', errors='ignore')
+                    pnginfo.add_text(key, value)
                 elif isinstance(value, tuple):
-                    print('여기가 이상합니다.')
-                    print(value)
-                    value = ', '.join(str(v) for v in value)  # 튜플의 각 요소를 문자열로 변환하고, 쉼표로 연결
-                pnginfo.add_text(key, value)
+                    pass
+                elif isinstance(value, int):
+                    pass
             
             img.save(buffer, format='PNG', pnginfo=pnginfo)
             encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
