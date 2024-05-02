@@ -29,8 +29,8 @@ from create_new_resource import create_new_resource
 from png_info import PNGInfoAPI
 from datetime import datetime
 
-bulk_folder_path = '/Users/nerdystar/Desktop/LOL/champ'
-
+# bulk_folder_path = r'W:\AI\이글이주\트위터\5월 포스팅용'
+bulk_folder_path =r'W:\AI\이글이주\chosen'
 current_script_path = os.path.abspath(__file__)
 base_directory = os.path.dirname(current_script_path)  
 generated_json_path = os.path.join(base_directory, 'generated-bulk-json-files')
@@ -50,7 +50,7 @@ try:
     # 최신 벌크 .json 가져오기
     new_bulk_json = get_latest_json_data(generated_json_path)
     # 현재 공용 폴더 json file 가져오기
-    current_public_json_file, public_folder_id = get_public_folder_by_user_id(session, user_id = 1)
+    current_public_json_file, public_folder_id = get_public_folder_by_user_id(session, user_id = 56)
     # 최신 벌크 json data 공용폴더 json에 'json' 에 적용시키기
     updated_public_json_file = merge_json_data(new_data= new_bulk_json, existing_data= current_public_json_file)
     # DB에 최신 공용 폴더 json file 적용하기.
@@ -80,7 +80,7 @@ try:
                 
                 image_path, thumbnail_path, resource_uuid = create_new_resource(
                     session= session,
-                    user_id= 1, 
+                    user_id= 56, 
                     original_image= original_image, 
                     thumbnail_image= thumbnail_image,
                     geninfo = geninfo,

@@ -80,7 +80,7 @@ def get_public_folder_by_user_id(session, user_id):
         with open(local_path, 'wb') as f:
             f.write(response.content)
         
-        with open(local_path, 'r') as f:
+        with open(local_path, 'r' , encoding='utf-8') as f:
             public_json_data = json.load(f)  # 파일 내용을 JSON으로 읽고 사전으로 변환
         
         return public_json_data, public_folder_id
