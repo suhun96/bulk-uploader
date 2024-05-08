@@ -40,8 +40,6 @@ def print_timestamp(message):
 
 try:
     print_timestamp('[main.py 작동 시작]')
-    # ssh 시작 및 DB 연결.
-    session, server = start_session()
     # 벌크 이미지 루트 디렉토리 설정 및 업데이트를 위한 벌크 json data 생성.
     print_timestamp('[지정한 벌크 디렉토리 .json 파일 화 시작]')
     json_tree = generate_json_tree(bulk_folder_path)
@@ -50,6 +48,8 @@ try:
     # 최신 벌크 .json 가져오기
     new_bulk_json = get_latest_json_data(generated_json_path)
     # 현재 공용 폴더 json file 가져오기
+    # ssh 시작 및 DB 연결.
+    session, server = start_session()
     current_public_json_file, public_folder_id = get_public_folder_by_user_id(session, user_id = 56)
     # 최신 벌크 json data 공용폴더 json에 'json' 에 적용시키기
     updated_public_json_file = merge_json_data(new_data= new_bulk_json, existing_data= current_public_json_file)
