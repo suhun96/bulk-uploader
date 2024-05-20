@@ -31,6 +31,7 @@ class Resource(Base):
     model_name = Column(String(200), default="")
     model_hash = Column(String(100), default="")
     sampler = Column(String(100), default="Euler")
+    sampler_scheduler = Column(String(100), default="")
     prompt = Column(Text, default="")
     negative_prompt = Column(Text, default="")
     width = Column(Integer, default=512)
