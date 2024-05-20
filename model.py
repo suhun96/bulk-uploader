@@ -60,6 +60,7 @@ class Resource(Base):
     uuid = Column(UUID(as_uuid=True), default=uuid.uuid4)
     thumbnail_image = Column(String(200), default="")
     is_variation = Column(Boolean, default=False)
+    generate_opt = Column(String(200), default="Upload")
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
