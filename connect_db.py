@@ -1,47 +1,57 @@
 import os
 import json
-import requests
-from urllib.parse import quote_plus
-from sshtunnel import SSHTunnelForwarder
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sshtunnel import SSHTunnelForwarder
+from urllib.parse import quote_plus
+import threading
+import requests
 from model import Base, PublicFolder
 from google.cloud import storage
 import uuid
+import threading
 
-def start_session():
-    raw_password = "nerdy@2024"
-    encoded_password = quote_plus(raw_password)
+engine = None
+session_factory = None
+server = None
+lock = threading.Lock()
 
-    # SSH 터널 설정
+def start_ssh_tunnel():
     server = SSHTunnelForwarder(
         ('34.64.105.81', 22),
         ssh_username='nerdystar',
-        ssh_private_key='~/.ssh/wcidfu-server',
+        ssh_private_key='./wcidfu-ssh',
         remote_bind_address=('10.1.31.44', 5432)
     )
     server.start()
     print("SSH tunnel established")
+    return server
 
+def setup_database_engine(password, port):
     db_user = "wcidfu"
     db_host = "127.0.0.1"
-    db_port = server.local_bind_port
     db_name = "wcidfu"
-
-    engine = create_engine(f'postgresql+psycopg2://{db_user}:{encoded_password}@{db_host}:{db_port}/{db_name}')
+    encoded_password = quote_plus(password)
+    engine = create_engine(f'postgresql+psycopg2://{db_user}:{encoded_password}@{db_host}:{port}/{db_name}')
     Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    return engine
 
+
+def get_session():
+    global engine, session_factory, server, lock
+    with lock:
+        if server is None:
+            server = start_ssh_tunnel()
+        if engine is None:
+            engine = setup_database_engine("nerdy@2024", server.local_bind_port)
+        if session_factory is None:
+            session_factory = sessionmaker(bind=engine)
+    session = scoped_session(session_factory)  # 수정된 부분: 세션 팩토리에서 직접 scoped_session 인스턴스 생성
     return session, server
 
-def end_session(session, server):
-    if session:
-        session.close()
-        print("Database session closed")
-    if server:
-        server.stop()
-        print("SSH tunnel closed")
+def end_session(session):
+    session.close()
     
 def get_latest_json_data(directory):
     files = [os.path.join(directory, f) for f in os.listdir(directory) if f.startswith('new_json_data') and f.endswith('.json')]
