@@ -107,7 +107,56 @@ import base64
 import io
 from datetime import datetime
 from tqdm import tqdm
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
+def create_thumbnail(image_path):
+    try:
+        with Image.open(image_path) as img:
+            maxHeight = 128
+            ratio = maxHeight / img.height
+            new_width = int(img.width * ratio)
+            new_height = maxHeight
+
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            buffer = io.BytesIO()
+            img.save(buffer, format='PNG')
+            encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            return "data:image/png;base64," + encoded_string
+    except Exception as e:
+        print(f"Failed to create thumbnail for {image_path}: {e}")
+        return None
+
+def encode_image_base64_with_exif(image_path):
+    try:
+        with Image.open(image_path) as img:
+            info = img.info.copy()
+            buffer = io.BytesIO()
+            pnginfo = PngImagePlugin.PngInfo()
+            
+            for key, value in info.items():
+                if isinstance(value, bytes):
+                    value = value.decode('utf-8', errors='ignore')
+                    pnginfo.add_text(key, value)
+                elif isinstance(value, tuple) or isinstance(value, int):
+                    pass
+            
+            img.save(buffer, format='PNG', pnginfo=pnginfo)
+            encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            return f"data:image/png;base64,{encoded_string}"
+    except Exception as e:
+        print(f"Failed to encode image {image_path}: {e}")
+        return None
+
+def process_image(image_path):
+    original = encode_image_base64_with_exif(image_path)
+    thumbnail = create_thumbnail(image_path)
+    if original and thumbnail:
+        return {
+            "original": original,
+            "thumbnail": thumbnail,
+            "uuid": str(uuid.uuid4())
+        }
+    return None
 
 def generate_json_tree(root_path):
     tree = {}
@@ -127,55 +176,6 @@ def generate_json_tree(root_path):
             tree[folder_id]["parentIdList"] = tree[parent_id]["parentIdList"] + [parent_id]
         return folder_id
 
-    def create_thumbnail(image_path):
-        try:
-            with Image.open(image_path) as img:
-                maxHeight = 128
-                ratio = maxHeight / img.height
-                new_width = int(img.width * ratio)
-                new_height = maxHeight
-
-                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-                buffer = io.BytesIO()
-                img.save(buffer, format='PNG')
-                encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
-                return "data:image/png;base64," + encoded_string
-        except Exception as e:
-            print(f"Failed to create thumbnail for {image_path}: {e}")
-            return None
-
-    def encode_image_base64_with_exif(image_path):
-        try:
-            with Image.open(image_path) as img:
-                info = img.info.copy()
-                buffer = io.BytesIO()
-                pnginfo = PngImagePlugin.PngInfo()
-                
-                for key, value in info.items():
-                    if isinstance(value, bytes):
-                        value = value.decode('utf-8', errors='ignore')
-                        pnginfo.add_text(key, value)
-                    elif isinstance(value, tuple) or isinstance(value, int):
-                        pass
-                
-                img.save(buffer, format='PNG', pnginfo=pnginfo)
-                encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
-                return f"data:image/png;base64,{encoded_string}"
-        except Exception as e:
-            print(f"Failed to encode image {image_path}: {e}")
-            return None
-
-    def process_image(image_path):
-        original = encode_image_base64_with_exif(image_path)
-        thumbnail = create_thumbnail(image_path)
-        if original and thumbnail:
-            return {
-                "original": original,
-                "thumbnail": thumbnail,
-                "uuid": str(uuid.uuid4())
-            }
-        return None
-
     # Directory traversal and JSON structure creation
     for dirpath, dirnames, filenames in os.walk(root_path):
         if dirpath == root_path:
@@ -193,13 +193,14 @@ def generate_json_tree(root_path):
             if filename.split('.')[-1].lower() in valid_extensions
         ]
 
-        with ProcessPoolExecutor(max_workers = 20) as executor:
-            for image_data in tqdm(executor.map(process_image, image_paths), desc=f"[Processing files in {dirpath}", unit="file"):
+        with ProcessPoolExecutor() as executor:
+            futures = {executor.submit(process_image, image_path): image_path for image_path in image_paths}
+            for future in tqdm(as_completed(futures), total=len(futures), desc=f"[Processing files in {dirpath}", unit="file"):
+                image_data = future.result()
                 if image_data:
                     tree[folder_id]["imageUrls"].append(image_data)
     
     return tree
-
 
 def save_json(data, filename):
     current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -208,8 +209,3 @@ def save_json(data, filename):
     full_file_path = os.path.join(target_directory, f'{filename}-{current_time}.json')
     with open(full_file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-
-# Example usage
-root_path = 'path_to_your_image_folder'
-json_tree = generate_json_tree(root_path)
-save_json(json_tree, 'image_tree')

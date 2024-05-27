@@ -1,6 +1,5 @@
 import subprocess
 import sys
-import pkg_resources
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 import json
@@ -8,20 +7,27 @@ from tqdm import tqdm
 import base64
 from io import BytesIO
 from PIL import Image
-from connect_db import get_session , end_session, get_latest_json_data, get_public_folder_by_user_id, merge_json_data, delete_and_upload_new_public_folder_file
+from connect_db import get_session, end_session, get_latest_json_data, get_public_folder_by_user_id, merge_json_data, delete_and_upload_new_public_folder_file
 from generate_json_tree import generate_json_tree, save_json
 from create_new_resource import create_new_resource 
 from png_info import PNGInfoAPI
 from datetime import datetime
+from importlib.metadata import distribution, PackageNotFoundError
 
 def install_requirements():
     subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
 
+def get_installed_packages():
+    try:
+        return {dist.metadata['Name'].lower() for dist in distribution().metadata()}
+    except PackageNotFoundError:
+        return set()
+
 try:
     with open('requirements.txt', 'r') as f:
         packages = f.readlines()
-    installed_packages = {pkg.key for pkg in pkg_resources.working_set}
-    missing_packages = [pkg.split('==')[0].strip() for pkg in packages if pkg.split('==')[0].strip() not in installed_packages]
+    installed_packages = get_installed_packages()
+    missing_packages = [pkg.split('==')[0].strip() for pkg in packages if pkg.split('==')[0].strip().lower() not in installed_packages]
 
     if missing_packages:
         print("Installing missing packages:", missing_packages)
