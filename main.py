@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     bulk_folder_path = sys.argv[1]
     current_script_path = os.path.abspath(__file__)
-    base_directory = os.path.dirname(current_script_path)  
+    base_directory = os.path.dirname(current_script_path)
     generated_json_path = os.path.join(base_directory, 'generated-bulk-json-files')
 
     try:
@@ -81,29 +81,28 @@ if __name__ == '__main__':
         
         new_bulk_json = get_latest_json_data(generated_json_path)
         session, server = get_session()
-        current_public_json_file, public_folder_id = get_public_folder_by_user_id(session, user_id=56)
-        
-        updated_public_json_file = merge_json_data(new_data=new_bulk_json, existing_data=current_public_json_file)
-        load_updated_public_json = json.loads(updated_public_json_file)
-        updated_public_json = load_updated_public_json['json']
-        updated_public_json_keys = list(updated_public_json.keys())
+        new_bulk_json_keys = list(new_bulk_json.keys())
 
-        with ThreadPoolExecutor() as executor:
-            futures = []
-            for key in updated_public_json_keys:
-                image_urls_dict = updated_public_json[key]["imageUrls"]
-                for target_dict in tqdm(image_urls_dict, desc=f"[Folder Name '{key}' Uploading images to GCS]", unit="image"):
-                    futures.append(executor.submit(process_image, target_dict, session))
-            
-            for future in as_completed(futures):
-                try:
-                    future.result()
-                except Exception as e:
-                    print(f"An error occurred while processing an image: {e}")
-
+        with ThreadPoolExecutor(max_workers=20) as executor:
+            futures = {executor.submit(process_image, target_dict, session): key for key in new_bulk_json_keys for target_dict in new_bulk_json[key]["imageUrls"]}
+            with tqdm(total=len(futures), desc="Uploading images to GCS") as pbar:
+                for future in as_completed(futures):
+                    try:
+                        future.result()  # If no exception, image processed successfully
+                        pbar.update(1)  # Update the progress bar
+                    except Exception as e:
+                        print(f"An error occurred while processing an image: {e}")
+                        pbar.update(1)  # Still update the progress bar even if there was an error
         print_timestamp('[GCS 이미지 업로드 종료]')
+
+        print_timestamp('[GCS 공용 폴더 업로드 시작]')
+        current_public_json_file, public_folder_id = get_public_folder_by_user_id(session, user_id=56)
+        print_timestamp('[GCS 최신 공용 폴더 다운로드 완료]')
+        updated_public_json_file = merge_json_data(new_data=new_bulk_json, existing_data=current_public_json_file)
+        print_timestamp('[GCS 최신 공용 폴더 + 업로드 된 파일 내용 병합 완료]')
+        load_updated_public_json = json.loads(updated_public_json_file)
         delete_and_upload_new_public_folder_file(session, public_folder_id, load_updated_public_json)
-        
+        print_timestamp('[GCS 최신 공용 폴더 업로드 완료]')
     finally:
         end_session(session)
         print_timestamp('[main.py 작동 종료]')
