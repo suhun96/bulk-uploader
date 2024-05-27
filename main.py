@@ -89,7 +89,7 @@ if __name__ == '__main__':
         session, server = get_session()
         new_bulk_json_keys = list(new_bulk_json.keys())
 
-        with ThreadPoolExecutor(max_workers=20) as executor:
+        with ThreadPoolExecutor(max_workers=10) as executor:
             futures = {executor.submit(process_image, target_dict, session): key for key in new_bulk_json_keys for target_dict in new_bulk_json[key]["imageUrls"]}
             with tqdm(total=len(futures), desc="Uploading images to GCS") as pbar:
                 for future in as_completed(futures):

@@ -193,7 +193,7 @@ def generate_json_tree(root_path):
             if filename.split('.')[-1].lower() in valid_extensions
         ]
 
-        with ProcessPoolExecutor() as executor:
+        with ProcessPoolExecutor(max_workers=10) as executor:
             futures = {executor.submit(process_image, image_path): image_path for image_path in image_paths}
             for future in tqdm(as_completed(futures), total=len(futures), desc=f"[Processing files in {dirpath}", unit="file"):
                 image_data = future.result()
