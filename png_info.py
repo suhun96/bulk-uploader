@@ -13,6 +13,8 @@ class PNGInfoAPI:
         }
 
         items = (image.info or {}).copy()
+        print('아이템 출력')
+        print(items)
         geninfo = items.pop('parameters', None)
 
         if "exif" in items:
