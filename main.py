@@ -58,12 +58,17 @@ def process_image(target_dict, session):
         png_info_api_instance = PNGInfoAPI()
         geninfo, params = png_info_api_instance.geninfo_params(image=original_image)
         
+        print("geninfo")
+
+        print(f"{geninfo}")
+
         print("파라미터 확인")
+
         print(f"{params}")
 
         image_path, thumbnail_path, resource_uuid = create_new_resource(
             session=session,
-            user_id=56, 
+            user_id=62, 
             original_image=original_image, 
             thumbnail_image=thumbnail_image,
             geninfo=geninfo,
