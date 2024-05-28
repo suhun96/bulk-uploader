@@ -18,10 +18,13 @@ def install_requirements():
     subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
 
 def get_installed_packages():
+    installed_packages = set()
     try:
-        return {dist.metadata['Name'].lower() for dist in distribution().metadata()}
+        for dist in distribution().discover():
+            installed_packages.add(dist.metadata['Name'].lower())
     except PackageNotFoundError:
-        return set()
+        pass
+    return installed_packages
 
 try:
     with open('requirements.txt', 'r') as f:
@@ -55,6 +58,9 @@ def process_image(target_dict, session):
         png_info_api_instance = PNGInfoAPI()
         geninfo, params = png_info_api_instance.geninfo_params(image=original_image)
         
+        print("파라미터 확인")
+        print(f"{params}")
+
         image_path, thumbnail_path, resource_uuid = create_new_resource(
             session=session,
             user_id=56, 
