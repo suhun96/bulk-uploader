@@ -5,18 +5,64 @@ import json
 from PIL import Image
 
 class PNGInfoAPI:
+    # def read_info_from_image(self, image: Image.Image):
+    #     IGNORED_INFO_KEYS = {
+    #         'jfif', 'jfif_version', 'jfif_unit', 'jfif_density', 'dpi', 'exif',
+    #         'loop', 'background', 'timestamp', 'duration', 'progressive', 'progression',
+    #         'icc_profile', 'chromaticity', 'photoshop',
+    #     }
+
+    #     items = (image.info or {}).copy()
+    #     print('아이템 출력')
+    #     print(items)
+    #     geninfo = items.pop('parameters', None)
+
+    #     if "exif" in items:
+    #         exif_data = items.pop("exif")
+    #         try:
+    #             exif = piexif.load(exif_data)
+    #         except OSError:
+    #             exif = None
+    #         exif_comment = (exif or {}).get("Exif", {}).get(piexif.ExifIFD.UserComment, b'')
+    #         try:
+    #             exif_comment = piexif.helper.UserComment.load(exif_comment)
+    #         except ValueError:
+    #             exif_comment = exif_comment.decode('utf8', errors="ignore")
+        
+    #         if exif_comment:
+    #             items['exif comment'] = exif_comment
+    #             geninfo = exif_comment
+        
+    #     elif "comment" in items: # for gif
+    #         geninfo = items["comment"].decode('utf8', errors="ignore")    
+
+    #     for field in IGNORED_INFO_KEYS:
+    #         items.pop(field, None)
+
+    #     if items.get("Software", None) == "NovelAI":
+    #         try:
+    #             json_info = json.loads(items["Comment"])
+    #             geninfo = f"""{items["Description"]}
+    # Negative prompt: {json_info["uc"]}
+    # Steps: {json_info["steps"]}, CFG scale: {json_info["scale"]}, Seed: {json_info["seed"]}, Size: {image.width}x{image.height}, Clip skip: 2, ENSD: 31337"""
+    #         except Exception:
+    #             pass
+              
+    #     return geninfo
+
     def read_info_from_image(self, image: Image.Image):
         IGNORED_INFO_KEYS = {
             'jfif', 'jfif_version', 'jfif_unit', 'jfif_density', 'dpi', 'exif',
             'loop', 'background', 'timestamp', 'duration', 'progressive', 'progression',
             'icc_profile', 'chromaticity', 'photoshop',
         }
-
+        
         items = (image.info or {}).copy()
         print('아이템 출력')
         print(items)
         geninfo = items.pop('parameters', None)
-
+        print('geninfo 초기값:', geninfo)
+        
         if "exif" in items:
             exif_data = items.pop("exif")
             try:
@@ -28,27 +74,31 @@ class PNGInfoAPI:
                 exif_comment = piexif.helper.UserComment.load(exif_comment)
             except ValueError:
                 exif_comment = exif_comment.decode('utf8', errors="ignore")
-        
+
             if exif_comment:
                 items['exif comment'] = exif_comment
                 geninfo = exif_comment
         
         elif "comment" in items: # for gif
-            geninfo = items["comment"].decode('utf8', errors="ignore")    
+            geninfo = items["comment"].decode('utf8', errors="ignore")
 
         for field in IGNORED_INFO_KEYS:
             items.pop(field, None)
+
+        print('무시할 키 제거 후 아이템:', items)
 
         if items.get("Software", None) == "NovelAI":
             try:
                 json_info = json.loads(items["Comment"])
                 geninfo = f"""{items["Description"]}
-    Negative prompt: {json_info["uc"]}
-    Steps: {json_info["steps"]}, CFG scale: {json_info["scale"]}, Seed: {json_info["seed"]}, Size: {image.width}x{image.height}, Clip skip: 2, ENSD: 31337"""
-            except Exception:
-                pass
-              
+Negative prompt: {json_info["uc"]}
+Steps: {json_info["steps"]}, CFG scale: {json_info["scale"]}, Seed: {json_info["seed"]}, Size: {image.width}x{image.height}, Clip skip: 2, ENSD: 31337"""
+            except Exception as e:
+                print('NovelAI 정보 처리 중 오류 발생:', e)
+        
+        print('최종 geninfo:', geninfo)
         return geninfo
+
 
     def parse_generation_parameters(self, x: str):
         res = {}

@@ -72,7 +72,7 @@ def process_image(target_dict, session):
 
         image_path, thumbnail_path, thumbnail_image_512_path, resource_uuid = create_new_resource(
             session=session,
-            user_id=62, 
+            user_id=61, 
             original_image=original_image, 
             thumbnail_image=thumbnail_image,
             thumbnail_image_512 = thumbnail_512_image,
@@ -118,7 +118,7 @@ if __name__ == '__main__':
                         pbar.update(1)  # Still update the progress bar even if there was an error
         print_timestamp('[GCS 이미지 업로드 종료]')
 
-        print_timestamp('[GCS 공용 폴더 업로드 시작] - 계정 정보 junare@nerdystar.io ')
+        print_timestamp('[GCS 공용 폴더 업로드 시작]')
         current_public_json_file, public_folder_id = get_public_folder_by_user_id(session, team_id=1)
         print_timestamp('[GCS 최신 공용 폴더 다운로드 완료]')
         updated_public_json_file = merge_json_data(new_data=new_bulk_json, existing_data=current_public_json_file)
