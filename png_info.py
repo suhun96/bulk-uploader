@@ -1,5 +1,6 @@
 import re
 import piexif
+import piexif.helper
 from PIL import Image
 
 class PNGInfoAPI:
