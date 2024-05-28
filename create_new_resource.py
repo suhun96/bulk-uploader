@@ -77,10 +77,11 @@ def create_new_resource(session, user_id, original_image, thumbnail_image, thumb
         
         image_path = new_resource.image
         thumbnail_path = new_resource.thumbnail_image
+        thumbnail_image_512_path = new_resource.thumbnail_image_512
         resource_uuid = str(new_resource.uuid)
 
         if geninfo == None and params == None:
-            return image_path, thumbnail_path, resource_uuid
+            return image_path, thumbnail_path, thumbnail_image_512_path, resource_uuid
 
         else:    
             if generation_data:
@@ -164,7 +165,7 @@ def create_new_resource(session, user_id, original_image, thumbnail_image, thumb
             else:
                 pass
         session.commit()
-        return image_path, thumbnail_path, resource_uuid
+        return image_path, thumbnail_path, thumbnail_image_512_path, resource_uuid
     except Exception as e:
         session.rollback()  # 에러 발생 시 롤백
         raise e

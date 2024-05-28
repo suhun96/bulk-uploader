@@ -70,7 +70,7 @@ def process_image(target_dict, session):
 
         print(f"{params}")
 
-        image_path, thumbnail_path, resource_uuid = create_new_resource(
+        image_path, thumbnail_path, thumbnail_image_512_path, resource_uuid = create_new_resource(
             session=session,
             user_id=62, 
             original_image=original_image, 
@@ -82,6 +82,7 @@ def process_image(target_dict, session):
 
         target_dict["original"] = f"https://storage.googleapis.com/wcidfu-bucket/_media/{image_path}"
         target_dict["thumbnail"] = f"https://storage.googleapis.com/wcidfu-bucket/_media/{thumbnail_path}"
+        target_dict["thumbnail_512"] = f"https://storage.googleapis.com/wcidfu-bucket/_media/{thumbnail_image_512_path}"
         target_dict["uuid"] = resource_uuid
 
 if __name__ == '__main__':
