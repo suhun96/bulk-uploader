@@ -65,8 +65,8 @@ def get_latest_json_data(directory):
         data = json.load(file)  # 파일 내용을 JSON으로 읽고 파이썬 사전으로 변환
         return data
 
-def get_public_folder_by_user_id(session, user_id):
-    public_folder = session.query(PublicFolder).filter(PublicFolder.create_user_id == user_id).first()
+def get_public_folder_by_user_id(session, team_id):
+    public_folder = session.query(PublicFolder).filter(PublicFolder.team_id == team_id).first()
     public_folder_id = public_folder.id
     
     if not public_folder or not public_folder.json_file:
