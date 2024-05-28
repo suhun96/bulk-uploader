@@ -167,7 +167,7 @@ def encode_image_base64_with_exif(image_path):
 def process_image(image_path):
     original = encode_image_base64_with_exif(image_path)
     thumbnail_128 = create_thumbnail_128(image_path)
-    thumbnail_512 = create_thumbnail_128(image_path)
+    thumbnail_512 = create_thumbnail_512(image_path)
     if original and thumbnail_128:
         return {
             "original": original,
