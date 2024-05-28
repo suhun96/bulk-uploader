@@ -89,6 +89,8 @@ class PNGInfoAPI:
 
     def geninfo_params(self, image):
         try:
+            print('이미지 확실히 들어오나요?')
+            print(type(image))
             geninfo = self.read_info_from_image(image)
             if geninfo == None:
                 params = None
