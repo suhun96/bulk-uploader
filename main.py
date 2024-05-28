@@ -44,16 +44,20 @@ def print_timestamp(message):
 def process_image(target_dict, session):
     original = target_dict["original"]
     thumbnail = target_dict["thumbnail"]
+    thumbnail_512 = target_dict["thumbnail_512"]
 
     if original.startswith("data:image/png;base64,"):
         original_base64_data = original.replace("data:image/png;base64,", "")
         thumbnail_base64_data = thumbnail.replace("data:image/png;base64,", "")
+        thumbnail_512_base64_data = thumbnail_512.replace("data:image/png;base64,", "")
         
         original_base64_decode = base64.b64decode(original_base64_data)
         thumbnail_base64_decode = base64.b64decode(thumbnail_base64_data)
+        thumbnail_512_base64_decode = base64.b64decode(thumbnail_512_base64_data)
         
         original_image = Image.open(BytesIO(original_base64_decode))
         thumbnail_image = Image.open(BytesIO(thumbnail_base64_decode))
+        thumbnail_512_image = Image.open(BytesIO(thumbnail_512_base64_decode))
 
         png_info_api_instance = PNGInfoAPI()
         geninfo, params = png_info_api_instance.geninfo_params(image=original_image)
@@ -71,6 +75,7 @@ def process_image(target_dict, session):
             user_id=62, 
             original_image=original_image, 
             thumbnail_image=thumbnail_image,
+            thumbnail_image_512 = thumbnail_512_image,
             geninfo=geninfo,
             params=params
         )

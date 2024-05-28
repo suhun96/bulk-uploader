@@ -109,10 +109,27 @@ from datetime import datetime
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-def create_thumbnail(image_path):
+def create_thumbnail_128(image_path):
     try:
         with Image.open(image_path) as img:
             maxHeight = 128
+            ratio = maxHeight / img.height
+            new_width = int(img.width * ratio)
+            new_height = maxHeight
+
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            buffer = io.BytesIO()
+            img.save(buffer, format='PNG')
+            encoded_string = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            return "data:image/png;base64," + encoded_string
+    except Exception as e:
+        print(f"Failed to create thumbnail for {image_path}: {e}")
+        return None
+    
+def create_thumbnail_512(image_path):
+    try:
+        with Image.open(image_path) as img:
+            maxHeight = 512
             ratio = maxHeight / img.height
             new_width = int(img.width * ratio)
             new_height = maxHeight
@@ -149,11 +166,13 @@ def encode_image_base64_with_exif(image_path):
 
 def process_image(image_path):
     original = encode_image_base64_with_exif(image_path)
-    thumbnail = create_thumbnail(image_path)
-    if original and thumbnail:
+    thumbnail_128 = create_thumbnail_128(image_path)
+    thumbnail_512 = create_thumbnail_128(image_path)
+    if original and thumbnail_128:
         return {
             "original": original,
-            "thumbnail": thumbnail,
+            "thumbnail": thumbnail_128,
+            "thumbnail_512": thumbnail_512, 
             "uuid": str(uuid.uuid4())
         }
     return None

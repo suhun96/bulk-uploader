@@ -59,6 +59,7 @@ class Resource(Base):
     sd_upscale = Column(String(4000), default="")
     uuid = Column(UUID(as_uuid=True), default=uuid.uuid4)
     thumbnail_image = Column(String(200), default="")
+    thumbnail_image_512 = Column(String(300), default="")
     is_variation = Column(Boolean, default=False)
     generate_opt = Column(String(200), default="Upload")
     created_at = Column(DateTime, default=datetime.now)

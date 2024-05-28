@@ -21,7 +21,7 @@ def upload_to_bucket(blob_name, data, bucket_name):
 
     return clean_blob_name
 # geninfo, params 향후 추가
-def create_new_resource(session, user_id, original_image, thumbnail_image, geninfo, params):
+def create_new_resource(session, user_id, original_image, thumbnail_image, thumbnail_image_512, geninfo, params):
     generation_data = geninfo
     
     try:
@@ -63,6 +63,16 @@ def create_new_resource(session, user_id, original_image, thumbnail_image, genin
         thumbnail_image_url = upload_to_bucket(thumbnail_blob_name, thumbnail_image_buffer.getvalue(), "wcidfu-bucket")
         
         new_resource.thumbnail_image = thumbnail_image_url  # 썸네일 URL을 리소스 객체에 저장
+
+        # 썸네일 이미지 처리
+        thumbnail_image_512_buffer = io.BytesIO()
+        thumbnail_image_512.save(thumbnail_image_512_buffer, format="PNG")
+        thumbnail_image_512_size = max(thumbnail_image_512.size)
+        thumbnail_image_512_blob_name = f"_media/thumbnail_512/{str(new_resource.uuid)}_512.png"
+        thumbnail_image_512_url = upload_to_bucket(thumbnail_image_512_blob_name, thumbnail_image_512_buffer.getvalue(), "wcidfu-bucket")
+        
+        new_resource.thumbnail_image_512 = thumbnail_image_512_url  # 썸네일 URL을 리소스 객체에 저장
+
         session.commit()
         
         image_path = new_resource.image
